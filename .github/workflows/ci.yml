@@ -12,16 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     
     services:
-      postgres:
-        image: postgres:16-alpine
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_USER: crm_user
-          POSTGRES_PASSWORD: crm_pass
-          POSTGRES_DB: crm_test
+          MYSQL_DATABASE: crm_test
+          MYSQL_USER: crm_user
+          MYSQL_PASSWORD: crm_pass
+          MYSQL_ROOT_PASSWORD: crm_pass
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -P 3306 -ucrm_user -pcrm_pass"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -49,12 +50,12 @@ jobs:
       - name: Run database migrations
         run: npx prisma db push
         env:
-          DATABASE_URL: postgresql://crm_user:crm_pass@localhost:5432/crm_test
+          DATABASE_URL: mysql://crm_user:crm_pass@localhost:3306/crm_test
 
       - name: Run tests
         run: npm test --if-present
         env:
-          DATABASE_URL: postgresql://crm_user:crm_pass@localhost:5432/crm_test
+          DATABASE_URL: mysql://crm_user:crm_pass@localhost:3306/crm_test
           JWT_SECRET: ci-test-secret-key-32chars-min!!
           NODE_ENV: test
 
