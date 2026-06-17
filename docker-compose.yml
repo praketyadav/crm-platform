@@ -1,0 +1,29 @@
+# Author: Aditya | Module: DevOps | CRM Platform v1.0
+# NOTE: Docker DB is optional — if MySQL is already installed locally,
+#       just point DATABASE_URL at localhost:3306 and skip this file.
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: crm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: crm_db
+      MYSQL_USER: crm_user
+      MYSQL_PASSWORD: crm_password_2024
+      MYSQL_ROOT_PASSWORD: root_password_2024
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+    driver: local

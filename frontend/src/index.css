@@ -1,0 +1,295 @@
+/* Author: Ajar | Module: Design System | CRM Platform v1.0 */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────
+   Global Styles & Custom Properties
+   ────────────────────────────────────────────── */
+
+:root {
+  --bg-dark: #0F0F14;
+  --surface: #1A1A24;
+  --surface-elevated: #22222F;
+  --primary: #6C63FF;
+  --primary-hover: #7B74FF;
+  --primary-glow: rgba(108, 99, 255, 0.3);
+  --success: #22C55E;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --text-primary: #F1F1F5;
+  --text-secondary: #8B8B9E;
+  --border: #2A2A3E;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ──────────────────────────────────────────────
+   Scrollbar
+   ────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ──────────────────────────────────────────────
+   Animated Score Ring (Signature Element)
+   ────────────────────────────────────────────── */
+
+@keyframes score-ring-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+@keyframes score-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--primary-glow)); }
+  50% { filter: drop-shadow(0 0 12px var(--primary-glow)) drop-shadow(0 0 24px rgba(108, 99, 255, 0.15)); }
+}
+
+.score-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 4;
+}
+
+.score-ring-fill {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  animation: score-ring-fill 1.2s ease-out forwards, score-glow-pulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+
+.score-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+
+/* ──────────────────────────────────────────────
+   Component Utilities
+   ────────────────────────────────────────────── */
+
+@layer components {
+  .glass-card {
+    @apply bg-surface border border-border rounded-xl p-6;
+    backdrop-filter: blur(10px);
+  }
+
+  .glass-card-elevated {
+    @apply bg-surface-elevated border border-border rounded-xl p-6;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-hover text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
+    box-shadow: 0 0 20px rgba(108, 99, 255, 0.2);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 30px rgba(108, 99, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    @apply bg-surface-elevated hover:bg-border text-text-primary font-medium px-4 py-2 rounded-lg border border-border transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply bg-danger/20 hover:bg-danger/30 text-danger font-medium px-4 py-2 rounded-lg border border-danger/30 transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full bg-surface-dark border border-border rounded-lg px-4 py-2.5 text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary/20 text-primary;
+  }
+
+  .badge-success {
+    @apply badge bg-success/20 text-success;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger/20 text-danger;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning/20 text-warning;
+  }
+
+  .stat-number {
+    font-family: 'JetBrains Mono', monospace;
+    @apply text-3xl font-bold;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-all duration-200;
+  }
+
+  .sidebar-link.active {
+    @apply text-primary bg-primary/10 border-r-2 border-primary;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   Kanban Board
+   ────────────────────────────────────────────── */
+
+.kanban-column {
+  @apply bg-surface rounded-xl border border-border min-h-[400px];
+}
+
+.kanban-column-won {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.05) 0%, var(--surface) 100%);
+}
+
+.kanban-column-lost {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--surface) 100%);
+}
+
+.kanban-card {
+  @apply bg-surface-elevated border border-border rounded-lg p-4 cursor-grab active:cursor-grabbing transition-all duration-200;
+}
+
+.kanban-card:hover {
+  @apply border-primary/50;
+  box-shadow: 0 0 15px rgba(108, 99, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.kanban-card.dragging {
+  @apply border-primary shadow-lg;
+  box-shadow: 0 8px 32px rgba(108, 99, 255, 0.2);
+  transform: rotate(2deg);
+}
+
+/* ──────────────────────────────────────────────
+   Micro-Animations
+   ────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(108, 99, 255, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Staggered children */
+.stagger-children > * {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
+/* ──────────────────────────────────────────────
+   React Big Calendar Overrides
+   ────────────────────────────────────────────── */
+
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+}
+
+.rbc-toolbar {
+  margin-bottom: 1rem;
+}
+
+.rbc-toolbar button {
+  @apply bg-surface-elevated border border-border text-text-primary rounded-lg px-3 py-1.5;
+}
+
+.rbc-toolbar button.rbc-active {
+  @apply bg-primary text-white border-primary;
+}
+
+.rbc-header {
+  @apply bg-surface-elevated border-border text-text-secondary py-2 font-medium;
+}
+
+.rbc-month-view, .rbc-time-view {
+  @apply border-border;
+}
+
+.rbc-day-bg {
+  @apply border-border;
+}
+
+.rbc-off-range-bg {
+  background: var(--bg-dark);
+}
+
+.rbc-today {
+  background: rgba(108, 99, 255, 0.05) !important;
+}
+
+.rbc-event {
+  @apply rounded-md text-xs font-medium border-0;
+  padding: 2px 6px;
+}
+
+.rbc-event.status-PENDING { background: var(--primary); }
+.rbc-event.status-DONE { background: var(--success); }
+.rbc-event.status-MISSED { background: var(--danger); }

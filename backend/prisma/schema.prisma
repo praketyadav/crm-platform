@@ -1,0 +1,294 @@
+// Author: Aditya | Module: Database Schema | CRM Platform v1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────
+// User & Team Models
+// ──────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  SALES_MANAGER
+  SALES_EXECUTIVE
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          Role     @default(SALES_EXECUTIVE)
+  teamId        String?
+  refreshToken  String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  team              Team?           @relation("TeamMembers", fields: [teamId], references: [id])
+  managedTeam       Team?           @relation("TeamManager")
+  assignedLeads     Lead[]          @relation("AssignedLeads")
+  createdLeads      Lead[]          @relation("CreatedLeads")
+  activities        LeadActivity[]
+  followUps         FollowUp[]
+  emailTemplates    EmailTemplate[]
+  emailCampaigns    EmailCampaign[]
+  aiInteractions    AIInteraction[]
+  notifications     Notification[]
+
+  @@index([email])
+  @@index([teamId])
+  @@index([role])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  managerId String   @unique
+  createdAt DateTime @default(now())
+
+  manager  User   @relation("TeamManager", fields: [managerId], references: [id])
+  members  User[] @relation("TeamMembers")
+}
+
+// ──────────────────────────────────────────────
+// Lead & Pipeline Models
+// ──────────────────────────────────────────────
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  COLD_CALL
+  EMAIL
+  SOCIAL
+}
+
+enum PipelineStageEnum {
+  NEW_LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+model Lead {
+  id             String            @id @default(uuid())
+  name           String
+  company        String
+  phone          String?
+  email          String
+  source         LeadSource        @default(WEBSITE)
+  status         String            @default("active")
+  assignedToId   String?
+  createdById    String
+  pipelineStage  PipelineStageEnum @default(NEW_LEAD)
+  score          Int?
+  scoreUpdatedAt DateTime?
+  estimatedValue Float?            @default(0)
+  notes          String?           @db.Text
+  isDeleted      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  assignedTo          User?               @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  createdBy           User                @relation("CreatedLeads", fields: [createdById], references: [id])
+  activities          LeadActivity[]
+  followUps           FollowUp[]
+  campaignRecipients  CampaignRecipient[]
+  aiInteractions      AIInteraction[]
+
+  @@index([assignedToId])
+  @@index([createdById])
+  @@index([pipelineStage])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+  @@index([score])
+}
+
+// ──────────────────────────────────────────────
+// Activity Tracking
+// ──────────────────────────────────────────────
+
+enum ActivityType {
+  CALL
+  EMAIL
+  NOTE
+  STAGE_CHANGE
+  SCORE_UPDATE
+}
+
+model LeadActivity {
+  id          String       @id @default(uuid())
+  leadId      String
+  userId      String
+  type        ActivityType
+  description String
+  metadata    String?  @db.Text
+  createdAt   DateTime     @default(now())
+
+  lead  Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// ──────────────────────────────────────────────
+// Follow-Up System
+// ──────────────────────────────────────────────
+
+enum FollowUpStatus {
+  PENDING
+  DONE
+  MISSED
+}
+
+model FollowUp {
+  id             String         @id @default(uuid())
+  leadId         String
+  assignedToId   String
+  scheduledAt    DateTime
+  reminderSentAt DateTime?
+  status         FollowUpStatus @default(PENDING)
+  notes          String?        @db.Text
+  createdAt      DateTime       @default(now())
+
+  lead       Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedTo User  @relation(fields: [assignedToId], references: [id])
+
+  @@index([leadId])
+  @@index([assignedToId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Email Campaign System
+// ──────────────────────────────────────────────
+
+enum EmailTemplateType {
+  FOLLOWUP
+  PROPOSAL
+  REMINDER
+  CUSTOM
+}
+
+model EmailTemplate {
+  id          String            @id @default(uuid())
+  name        String
+  subject     String
+  body        String            @db.Text
+  type        EmailTemplateType @default(CUSTOM)
+  createdById String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy  User            @relation(fields: [createdById], references: [id])
+  campaigns  EmailCampaign[]
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+}
+
+model EmailCampaign {
+  id             String         @id @default(uuid())
+  name           String
+  templateId     String
+  status         CampaignStatus @default(DRAFT)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  recipientCount Int            @default(0)
+  openCount      Int            @default(0)
+  createdById    String
+  createdAt      DateTime       @default(now())
+
+  template    EmailTemplate       @relation(fields: [templateId], references: [id])
+  createdBy   User                @relation(fields: [createdById], references: [id])
+  recipients  CampaignRecipient[]
+
+  @@index([status])
+  @@index([createdById])
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  OPENED
+  FAILED
+}
+
+model CampaignRecipient {
+  id         String          @id @default(uuid())
+  campaignId String
+  leadId     String
+  sentAt     DateTime?
+  openedAt   DateTime?
+  status     RecipientStatus @default(PENDING)
+
+  campaign  EmailCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead      Lead           @relation(fields: [leadId], references: [id])
+
+  @@index([campaignId])
+  @@index([leadId])
+}
+
+// ──────────────────────────────────────────────
+// AI Interaction Tracking
+// ──────────────────────────────────────────────
+
+enum AIInteractionType {
+  LEAD_ANALYSIS
+  EMAIL_GENERATION
+  LEAD_SCORING
+}
+
+model AIInteraction {
+  id         String            @id @default(uuid())
+  userId     String
+  leadId     String?
+  type       AIInteractionType
+  input      String            @db.Text
+  output     String            @db.Text
+  tokensUsed Int               @default(0)
+  createdAt  DateTime          @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  lead  Lead?  @relation(fields: [leadId], references: [id])
+
+  @@index([userId])
+  @@index([leadId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────
+// Notification System
+// ──────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String   @db.Text
+  type      String   @default("GENERAL")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
